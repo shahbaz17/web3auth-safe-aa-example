@@ -119,14 +119,14 @@ function App() {
   };
 
   const createSafe = async() => {
-    const privKey = await getPrivateKey();
-    const provider = new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/eth_goerli');
-    const signerWallet = new ethers.Wallet(privKey, provider);
-    const ethAdapter = new EthersAdapter({ethers, signerOrProvider: signerWallet});
+    // Currently, createSafe is not supported by SafeAuthKit.
+    const provider = new ethers.providers.Web3Provider(safeAuth?.getProvider() as SafeEventEmitterProvider);
+    const signer = provider.getSigner();
+    const ethAdapter = new EthersAdapter({ethers, signerOrProvider: signer || provider});
     const safeFactory = await SafeFactory.create({ ethAdapter });
     const safe: Safe = await safeFactory.deploySafe({ safeAccountConfig: { threshold: 1, owners: [safeAuthSignInResponse?.eoa as string] }})
-    console.log('SAFE Created!', safe.getAddress())
-    uiConsole('SAFE Created!', safe.getAddress())
+    console.log('SAFE Created!', await safe.getAddress())
+    uiConsole('SAFE Created!', await safe.getAddress())
   }
 
   const getChainId = async () => {
@@ -177,16 +177,6 @@ function App() {
     const rpc = new RPC(provider);
     const signedMessage = await rpc.signMessage();
     uiConsole(signedMessage);
-  };
-
-  const getPrivateKey = async () => {
-    if (!provider) {
-      uiConsole("provider not initialized yet");
-      return;
-    }
-    const rpc = new RPC(provider);
-    const privateKey = await rpc.getPrivateKey();
-    return privateKey;
   };
 
   function uiConsole(...args: any[]): void {
